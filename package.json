@@ -4,33 +4,33 @@
   "description": "Local project telemetry for AI-assisted work across Codex and Kiro",
   "type": "module",
   "bin": {
-    "aip": "./cli.mjs"
+    "aip": "./tool/integration-and-release/cli.mjs"
   },
   "exports": {
-    "./hook": "./hook.cjs"
+    "./hook": "./tool/integration-and-release/hook.cjs"
   },
   "files": [
-    "cli.mjs",
-    "init.mjs",
-    "hook.cjs",
-    "serve.mjs",
-    "record.mjs",
-    "import-history.mjs",
-    "data.mjs",
-    "rollout.mjs",
-    "app.jsx",
-    "styles.css",
-    "tailwind.config.cjs",
-    "components/",
-    "lib/",
-    "SHADCN-LICENSE",
-    "telemetry/.codex/hooks.json",
-    "telemetry/.codex/hooks/context-history.cjs",
-    "telemetry/.codex/hooks/context-package-check.cjs",
-    "telemetry/.codex/hooks/context-usage.cjs",
-    "telemetry/.codex/hooks/performance-store.cjs",
-    "telemetry/.kiro/hooks/performance.json",
-    "telemetry/.kiro/hooks/performance-run.cjs"
+    "tool/integration-and-release/cli.mjs",
+    "tool/integration-and-release/hook.cjs",
+    "tool/integration-and-release/init.mjs",
+    "tool/integration-and-release/runtime.cjs",
+    "tool/integration-and-release/serve.mjs",
+    "tool/documentation/context.mjs",
+    "tool/telemetry/record.mjs",
+    "tool/telemetry/import-history.mjs",
+    "tool/telemetry/data.mjs",
+    "tool/telemetry/rollout.mjs",
+    "tool/telemetry/.codex/hooks.json",
+    "tool/telemetry/.codex/hooks/context-history.cjs",
+    "tool/telemetry/.codex/hooks/context-package-check.cjs",
+    "tool/telemetry/.codex/hooks/context-usage.cjs",
+    "tool/telemetry/.codex/hooks/performance-store.cjs",
+    "tool/telemetry/.codex/hooks/performance-backup.cjs",
+    "tool/telemetry/.kiro/hooks/performance.json",
+    "tool/telemetry/.kiro/hooks/performance-run.cjs",
+    "dashboard/",
+    "design-system/",
+    "SHADCN-LICENSE"
   ],
   "repository": {
     "type": "git",
@@ -41,17 +41,21 @@
     "access": "public"
   },
   "scripts": {
-    "start": "node serve.mjs",
-    "import-history": "node import-history.mjs",
-    "record": "node record.mjs",
-    "test": "node --test history.test.mjs",
-    "test:package": "node scripts/test-package.mjs",
-    "build:site": "node scripts/build-site.mjs"
+    "start": "node tool/integration-and-release/runtime.cjs serve.mjs",
+    "import-history": "node tool/integration-and-release/runtime.cjs ../telemetry/import-history.mjs",
+    "record": "node tool/integration-and-release/runtime.cjs ../telemetry/record.mjs",
+    "backup": "node tool/integration-and-release/runtime.cjs cli.mjs backup",
+    "context": "node tool/integration-and-release/runtime.cjs cli.mjs context",
+    "test": "node --test tool/telemetry/history.test.mjs",
+    "test:package": "node tool/integration-and-release/test-package.mjs",
+    "build:site": "node website/build.mjs"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "1.2.1",
     "@radix-ui/react-select": "2.4.1",
     "@radix-ui/react-slot": "1.5.0",
+    "@radix-ui/react-tooltip": "1.4.1",
+    "@tobiasoberpaul/mdk": "0.5.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "esbuild": "0.21.5",
@@ -59,15 +63,12 @@
     "postcss": "8.5.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-markdown": "10.1.0",
     "tailwind-merge": "2.6.0",
     "tailwindcss": "3.4.17"
   },
   "engines": {
     "node": ">=22.13.0"
   },
-  "license": "MIT",
-  "devDependencies": {
-    "@radix-ui/react-tooltip": "1.4.1",
-    "@tobiasoberpaul/mdk": "0.5.0"
-  }
+  "license": "MIT"
 }

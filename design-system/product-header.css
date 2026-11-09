@@ -1,0 +1,10 @@
+.aip-header-navigation {
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid hsl(var(--input));
+  border-radius: 6px;
+}
+.aip-header-navigation > :is(button,a) { border-radius: 0; }
+.aip-header-navigation > :is(button,a) + :is(button,a) { border-inline-start: 1px solid hsl(var(--input)); }
+.aip-header-navigation > :is(button,a):focus-visible { position: relative; z-index: 1; outline-offset: -3px; }

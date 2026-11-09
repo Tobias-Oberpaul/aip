@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Set up local telemetry, link runs to tickets and manage your project database.">
+  <title>Documentation · AI Performance</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/motion.css">
+  <link rel="stylesheet" href="../assets/playground.css">
+  <link rel="stylesheet" href="../assets/product-header.css">
+  <link rel="stylesheet" href="../assets/page-spacing.css">
+  <link rel="stylesheet" href="../assets/documentation-toc.css">
+  <script type="module" src="../assets/site.js"></script>
+</head>
+<body>
+  <div id="root">
+    <main class="documentation mx-auto !block w-full max-w-[var(--site-content-width)] !py-8 !scroll-pt-4">
+      <header class="mb-8">
+        <nav aria-label="AI Performance pages" class="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          <a href="../" aria-label="AI Performance">AI Performance</a>
+          <a href="./" aria-current="page">Documentation</a>
+          <a href="https://github.com/Tobias-Oberpaul/aip">GitHub <svg class="inline" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6m0-6-9 9"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+        </nav>
+      </header>
+      <article class="space-y-4">
+        <header class="page-header">
+          <p class="page-header-eyebrow">AI PERFORMANCE</p>
+          <h1>Documentation</h1>
+          <p class="page-header-description">Set up data collection in your local clone and see what each integration records.</p>
+        </header>
+        <nav data-static-toc aria-label="On this page" class="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          <a href="#get-started">Get started</a><a href="#collection">Collection</a><a href="#tickets">Tickets</a><a href="#dashboard">Dashboard</a>
+          <a href="#privacy">Privacy</a><a href="#history">Migration and backup</a>
+        </nav>
+        <section id="get-started">
+          <h2>Get started</h2>
+          <p>Install Git and Node.js 22.13 or newer. From your own Git clone, install the release package or replace its name with the path to a pre-release archive.</p>
+          <pre><code>npm install -D @tobiasoberpaul/aip
+npm exec -- aip serve</code></pre>
+          <p>Open the printed loopback URL. For regular package updates, run <code>npm update @tobiasoberpaul/aip</code>. To run directly from source instead, use the tool repository:</p>
+          <pre><code>git clone https://github.com/Tobias-Oberpaul/aip.git
+cd aip
+npm ci
+npm start -- "&lt;path-to-your-project-clone&gt;"</code></pre>
+        </section>
+        <section id="collection">
+          <h2>How collection starts</h2>
+          <p>Installing the package leaves collection off. Enable the hooks you want in your own clone:</p>
+          <pre><code>npm exec -- aip init --codex
+npm exec -- aip init --kiro
+# Or enable both with init --codex --kiro</code></pre>
+          <p>Codex users also review the new hooks in <strong>Settings → Hooks</strong>. Each clone opts in separately, even when the team shares hook configuration. Run <code>npm exec -- aip disable</code> to pause collection by the npm hooks. The steps below also describe manual setup when running from source.</p>
+          <p>If you installed the previous package, <code>@tobiasoberpaul/ai-performance</code>, install <code>@tobiasoberpaul/aip</code> first. Run <code>aip init</code> with the same provider options before uninstalling the old package. This updates the launchers and keeps your local database.</p>
+          <h3 class="docs-subheading">Codex</h3>
+          <ol>
+            <li>Copy the scripts from <code>tool/telemetry/.codex/hooks/</code> into <code>.codex/hooks/</code> in your project. Merge the entries from <code>tool/telemetry/.codex/hooks.json</code> into your project's <code>.codex/hooks.json</code>.</li>
+            <li>Review and trust the hooks in Codex under <strong>Settings → Hooks</strong> or with <code>/hooks</code> in the CLI. Use your own local hook configuration when deciding whether to collect usage.</li>
+            <li>Work in Codex. The usage hook records available token counts per model attempt. The history hook saves available start context, timing and quota measurements at turn completion, interruption and session end.</li>
+          </ol>
+          <h3 class="docs-subheading">Kiro</h3>
+          <ol>
+            <li>Copy <code>tool/telemetry/.kiro/hooks/</code> into <code>.kiro/hooks/</code> in your project. Copy <code>performance-store.cjs</code> and <code>performance-backup.cjs</code> from <code>tool/telemetry/.codex/hooks/</code> into your project's <code>.codex/hooks/</code>.</li>
+            <li>Start a Kiro session in the clone. The AgentStop hook records the completed run as Kiro. To associate runs with a known ticket at capture time, set <code>AI_PERFORMANCE_TICKET_ID</code> in the environment that starts Kiro.</li>
+            <li>Supply measured per-run credits through the record command when you have a source for them. Account and pool balances have separate records.</li>
+          </ol>
+        </section>
+        <section id="tickets">
+          <h2>Connect a run to a ticket</h2>
+          <p>Give each ticket a stable ID, a name and an epic. Add a text <code>description</code> with the goal, context and expected result. Keep new work within one chat per ticket. Link a Codex turn by its session ID and turn ID in the ticket's <code>subtasks</code>. Each Codex turn can belong to one ticket. For Kiro, use a ticket ID during capture or list unassigned runs with <code>npx aip record list unassigned</code> and link one using its <code>provider/id</code>.</p>
+          <p>Define epic names in the project index <code>CONTEXT.md</code> and keep agent instructions in <code>AGENTS.md</code>. Run <code>npx aip init --context</code> to add this setup on its own. Use <code>npx aip context epic "Epic name"</code> to add a new area and <code>npx aip record list ticket</code> to inspect existing tickets.</p>
+          <pre><code>npm run record -- ticket ticket.json "&lt;path-to-your-project-clone&gt;"</code></pre>
+          <p>The ticket view adds up recorded work time and shows tokens and credits in their original units. Missing measurements are marked in the ticket details.</p>
+          <p>See the <a href="https://github.com/Tobias-Oberpaul/aip#tickets-und-messwerte-schreiben">record command reference</a> for JSON examples.</p>
+        </section>
+        <section id="dashboard">
+          <h2>Read the dashboard</h2>
+          <p>The visible dashboard checks for updates every 15 seconds and when you return to its tab. Filter tickets by epic and story points, or sort by recorded effort. Open a ticket for its description, measurements and work history.</p>
+          <p>The two headline values show project-wide tokens and work time per story point. Below 25% context, their badges compare the last measured chat with the rest of the project. At 25% and above, the badges compare recent tickets in that chat with its earlier tickets. Each comparison needs at least five measured tickets per group and metric.</p>
+          <p>Open <strong>Documentation</strong> to read the project's <code>CONTEXT.md</code> and linked notes. On a subpage, <strong>Back</strong> opens the previous page. The breadcrumb gives you direct access to earlier pages in the path.</p>
+        </section>
+        <section id="privacy">
+          <h2>What stays in your clone</h2>
+          <p>Each local clone has its own <code>.codex/performance.sqlite</code>. The npm initializer adds the following rules. For manual setup, add them to <code>.gitignore</code> or <code>.git/info/exclude</code> before enabling collection.</p>
+          <pre><code>/.codex/performance.sqlite*
+/.codex/backups/
+/.codex/performance-backup-*.error
+/.codex/context-packages.json
+/.codex/context-usage.jsonl
+/.codex/context-history/
+/.codex/ai-performance-enabled.json</code></pre>
+          <p>The database contains ticket metadata, tool and model names where available, run references, timings, and usage and quota measurements. The supplied hooks omit prompt text, replies and tool output. GitHub Pages publishes this guide. Your dashboard is served on your computer.</p>
+          <p>Everyone using a separate clone gets a separate database. People with access to the same checkout can access its database.</p>
+        </section>
+        <section id="history">
+          <h2>Migrate and back up your data</h2>
+          <p>On first open, the tool copies legacy ticket data, usage logs and saved measurements into SQLite. To capture measurements still available in Codex history, run the import from the tool directory before deleting old chats.</p>
+          <pre><code>npm run import-history -- "&lt;path-to-your-project-clone&gt;"</code></pre>
+          <p>Saved measurements remain available after their source chat is removed. AIP keeps verified daily snapshots and a rolling <code>latest.sqlite</code> in <code>.codex/backups/</code>. List available snapshots, then preview the one you want to restore.</p>
+          <pre><code>npx aip backup list
+npx aip backup preview latest.sqlite
+npx aip backup restore latest.sqlite &lt;version-from-preview&gt;</code></pre>
+          <p>From the tool clone, use <code>npm run backup --</code> followed by the same subcommand. Restore saves the previous database contents as an undo snapshot and prints its name.</p>
+        </section>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

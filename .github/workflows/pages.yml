@@ -4,9 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'site/**'
-      - 'site-src/**'
-      - 'scripts/build-site.mjs'
+      - 'website/**'
+      - 'design-system/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -35,7 +34,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: site
+          path: website/public
   deploy:
     needs: build
     runs-on: ubuntu-latest

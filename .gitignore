@@ -1,8 +1,14 @@
 /node_modules/
+/.aip/handoffs/
 /.codex/context-usage.jsonl
 /.codex/context-packages.json
 /.codex/context-history/
 /.codex/performance.sqlite*
+/.codex/backups/
+/.codex/performance-backup-*.error
 /.codex/ai-performance-enabled.json
 /*.tgz
-/site/assets/site.js
+/website/public/assets/site.js
+/website/public/assets/documentation-toc.css
+/website/public/assets/product-header.css
+/website/public/assets/tokens.css

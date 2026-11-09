@@ -8,6 +8,8 @@ Lokales Dashboard für KI-gestützte Arbeit. Tickets können Durchläufe mehrere
 
 Führe die Befehle mit Node.js 22.13 oder neuer im Stammverzeichnis des Ziel-Clones aus.
 
+Wenn `npm start` mit einer älteren Node-Version aufgerufen wird, sucht AIP eine kompatible Version im PATH und unter Windows zusätzlich in der lokalen Codex-Runtime. Ist keine verfügbar, installiere eine aktuelle Node-LTS-Version und öffne ein neues Terminal.
+
 ```powershell
 npm install -D @tobiasoberpaul/aip
 npm exec -- aip serve
@@ -41,7 +43,7 @@ npm ci
 npm start
 ```
 
-Öffne die ausgegebene Adresse mit `127.0.0.1`. Ohne Pfad wertet das Dashboard das aktuelle Verzeichnis aus. Übergib ein anderes Projekt mit `npm start -- "<Projektpfad>"`. **Refresh** liest die Daten erneut.
+Öffne die ausgegebene Adresse mit `127.0.0.1`. Ohne Pfad wertet das Dashboard das aktuelle Verzeichnis aus. Übergib ein anderes Projekt mit `npm start -- "<Projektpfad>"`. Der sichtbare Dashboard-Tab prüft alle 15 Sekunden und beim Wiederanzeigen auf neue Daten.
 
 ## Projektdaten und Migration
 
@@ -51,8 +53,8 @@ Sichere `.codex/performance.sqlite`, wenn keine Erfassung läuft. Die Datenbank 
 
 ## Hooks
 
-- **Codex:** Kopiere die Skripte aus `telemetry/.codex/hooks/` und ergänze die Hook-Einträge in der bestehenden `.codex/hooks.json`. Prüfe und bestätige sie in Codex unter **Settings → Hooks** oder mit `/hooks`. Die Hooks benötigen Git und Node.js 22.13 oder neuer im PATH.
-- **Kiro:** Kopiere `telemetry/.kiro/hooks/` nach `.kiro/hooks/` sowie `telemetry/.codex/hooks/performance-store.cjs` nach `.codex/hooks/`. Der AgentStop-Hook erfasst lokale Durchläufe als Kiro. Ist `AI_PERFORMANCE_TICKET_ID` in der Kiro-Umgebung gesetzt, verwendet er diese Ticket-ID. Andernfalls erscheint der Durchlauf unter **Unassigned runs**. Credits und Dauer können aus einer geeigneten Quelle ergänzt werden.
+- **Codex:** Kopiere die Skripte aus `tool/telemetry/.codex/hooks/` und ergänze die Hook-Einträge in der bestehenden `.codex/hooks.json`. Prüfe und bestätige sie in Codex unter **Settings → Hooks** oder mit `/hooks`. Die Hooks benötigen Git und Node.js 22.13 oder neuer im PATH.
+- **Kiro:** Kopiere `tool/telemetry/.kiro/hooks/` nach `.kiro/hooks/` und die beiden Dateien `performance-store.cjs` und `performance-backup.cjs` aus `tool/telemetry/.codex/hooks/` nach `.codex/hooks/`. Der AgentStop-Hook erfasst lokale Durchläufe als Kiro. Ist `AI_PERFORMANCE_TICKET_ID` in der Kiro-Umgebung gesetzt, verwendet er diese Ticket-ID. Andernfalls findest du den Durchlauf mit `npx aip record list unassigned` und kannst ihn mit `npx aip record link <provider>/<id> <ticket-id>` zuordnen. Credits und Dauer können aus einer geeigneten Quelle ergänzt werden.
 
 ## Tickets und Messwerte schreiben
 
@@ -67,6 +69,12 @@ npm run record -- link "kiro/<run-id>" "<ticket-id>"
 ```
 
 Ein Ticket hat mindestens `id`, `name` und `epic`. Dieselbe ID aktualisiert den Eintrag. Für Codex verknüpfen `sessionId` und `turnId` in `subtasks` die erfassten Modellaufrufe. Andere Integrationen können `ticketId` am Durchlauf angeben oder den Durchlauf später verknüpfen.
+
+Ergänze bei neuen Tickets `description` als Text mit Ziel, Kontext und erwartetem Ergebnis. Ein Klick auf eine Ticketzeile öffnet die Beschreibung, Messwerte und Durchläufe in einer Detailansicht.
+
+`aip init` ergänzt in `AGENTS.md` eine Regel zur Epic-Zuordnung. Projekte können dort ihre Epic-Namen und Zuständigkeiten festlegen. Vor einem neuen Ticket prüft der Agent diese Liste und die bereits verwendeten Namen mit `npx aip record list ticket`. Bestehende Tickets behalten ihre Zuordnung.
+
+Tickets gehören in die lokale AIP-Datenbank des Repositorys, in dem die Änderung landet. Betrifft eine Aufgabe mehrere Repositorys, erfasst jedes seinen eigenen Teil. Nach dem npm-Update übernimmt `npx aip init --context` die Regel in eine bestehende AIP-Einrichtung, ohne die Provider-Hooks neu zu konfigurieren.
 
 Ein Kiro-Durchlauf mit einem gemessenen Verbrauch:
 
@@ -86,25 +94,45 @@ Eine Kontingentbeobachtung enthält `id`, `provider`, `account`, `periodStart`, 
 
 ## Auswertung
 
-The ticket overview groups unique tickets by epic and follows the dashboard's epic filter. Switch between ticket count, story points, recorded tokens and work time. Score distributions include unscored tickets, and the totals flag incomplete measurements.
+The ticket list fits as many complete rows as the available height allows and defaults to most recent activity. Its epic and story-point filters narrow only the ticket list. Sort by recorded tokens, work time or their per-story-point equivalents. Tickets without the selected measurement sort last. Tickets and runs show the recorded provider, model and reasoning effort when available. Use the history import to enrich older records whose source transcript is still present. Use `npx aip record list quota` to inspect account and pool measurements.
 
-The chat-context overview estimates starting context from input tokens divided by the model context window for the first recorded request in a ticket’s first implementation run. It includes that request’s prompt and compares completed tickets with the same starting model and story-point estimate. Switch between total tokens, work time and rework rounds. The dashboard suggests trying a fresh chat only when the below-25% baseline and two adjacent higher bands each have at least three token measurements and both higher medians exceed the baseline by at least 25%. This is a signal to test, and it does not start a new chat automatically.
+The chat-context overview plots tokens or work time per story point against estimated context at the first recorded request. It includes all positive story-point sizes by default, with independent filters for ticket size and starting model. Rework rounds are also available. The heatmap groups tickets into 5-percentage-point context columns and ten effort rows. The top row includes higher values, and stronger colors indicate more tickets. Select a populated cell to inspect its tickets. The heatmap keeps its project-wide scale when filtering by story points or model. Measured tickets without a starting-context estimate appear in a separate Unknown column and stay out of context-band calculations. Each summary band shows the median and, where a positive baseline exists, the change from the below-25% band.
 
-Quota attribution coverage divides the measured quota use assigned to tickets by the highest observed account usage in each 5-hour window. The project total weights windows by their observed usage and stays the same when the epic filter changes. The remaining usage is split into measured runs without a ticket and usage without a matching measurement. Only snapshots available in the analysed Codex chats contribute. Windows where measured runs exceed observed account usage are flagged and excluded from the total.
+Das Dashboard zeigt Arbeitszeit und Tokens pro Story Point zusätzlich zu den absoluten Ticketwerten. Für jede Kennzahl gilt ein gemeinsamer Projektwert über alle Ticketgrößen: Summe der Messwerte geteilt durch die Summe der zugehörigen Story Points. In die Bewertung fließen mindestens drei erledigte Tickets mit positiven Story Points und vollständigen, positiven Messwerten ein. Für den Token-Score zählen reine Codex-Tickets. Nacharbeit fließt über die Ticket-Summen ein. Der Score ist `100 × Projektwert pro SP / Ticketwert pro SP`, gerundet auf eine ganze Zahl. Ab 110 ist die Bewertung grün, von 90 bis 109 neutral und unter 90 rot. Projektwerte und Ticket-Scores bleiben beim Epic-Filter gleich und gelten für das ganze Ticket.
 
-Each measured window has its own quota bar. Hover or focus a segment for its share of that window’s full quota. Unused quota reflects the available snapshot. Zero-only snapshots can have a provisional reset and are excluded. The overall attribution score uses observed consumption as its denominator.
-
-When a run has no direct quota association, its work interval places it in a window if it overlaps exactly one observed 5-hour window. Time-based placement leaves the run’s quota usage unknown.
-
-Das Dashboard bewertet Tokenverbrauch und Arbeitsdauer getrennt. Für jede Kennzahl vergleicht es ein erledigtes Ticket mit mindestens zwei anderen erledigten Projekttickets derselben Story-Point-Stufe und vollständigen, positiven Messwerten. Die Formel pro Kennzahl lautet `100 × Median der Vergleichstickets / Messwert des Tickets`. Nacharbeit fließt über die jeweiligen Summen ein. Ab 110 ist die Bewertung grün, von 90 bis 109 gelb und unter 90 rot. Beide Bewertungen gelten für das gesamte Ticket und bleiben beim Epic-Filter und in geteilten 5-Stunden-Fenstern gleich.
-
-Änderungen an React-Komponenten, CSS und der Datenaufbereitung laden den geöffneten Browser-Tab automatisch neu. Änderungen am Server-Einstiegspunkt `serve.mjs` erfordern einen Serverneustart.
-
-Mit gespeicherten Kontingentmessungen gruppiert das Dashboard die Arbeitspakete nach dem Reset-Zeitpunkt des 5-Stunden-Kontingents. Ein Ticket mit Durchläufen in mehreren Fenstern erscheint anteilig in jedem Fenster. Die Summe berücksichtigt die gemessenen Durchläufe der angezeigten Tickets und folgt dem Epic-Filter. Durchläufe ohne zuordenbaren Reset bleiben separat sichtbar.
+Änderungen an React-Komponenten, CSS und der Datenaufbereitung laden den geöffneten Browser-Tab automatisch neu. Änderungen am Server-Einstiegspunkt `tool/integration-and-release/serve.mjs` erfordern einen Serverneustart.
 
 ## Vorhandene Messwerte sichern
 
 Führe `npm run import-history` im Tool-Projekt aus. Für ein anderes Projekt nutze `npm run import-history -- "<Projektpfad>"`. Der Import durchsucht aktive und archivierte Codex-Sitzungen der eingetragenen Tickets und schreibt die Messdaten in das jeweilige Projekt. Wiederholte Importe zählen dieselben Messwerte einmal. `npm start -- --codex-history` führt den Import vor dem Start aus.
+
+## Lokale Sicherungen
+
+Vor dem ersten Schreibvorgang eines Kalendertags legt AIP einen geprüften SQLite-Stand in `.codex/backups/` an. Die letzten 30 Tagesstände pro Clone bleiben erhalten. Nach erfolgreichen Änderungen aktualisiert AIP `latest.sqlite` im Hintergrund, gebündelt in einem Abstand von ungefähr zehn Sekunden. Das Archiv und die Fehlerstatusdateien sind von Git ausgeschlossen.
+
+Für eine Wiederherstellung führe diese Befehle im Projektverzeichnis aus. Bei einer npm-Installation verwende `npx aip backup` gefolgt von denselben Unterbefehlen.
+
+```text
+npm run backup -- list
+npm run backup -- preview latest.sqlite
+npm run backup -- restore <name> <version>
+```
+
+`list` zeigt die vorhandenen Stände und eventuelle Sicherungsfehler. `preview` prüft den gewählten Stand und gibt die Anzahl der Tickets, Aufrufe, Durchläufe und Sitzungsmessungen aus. Verwende bei `restore` den Namen und die Version aus der Vorschau. Der Befehl ersetzt den Inhalt der vorhandenen SQLite-Datenbank und gibt den Namen der vorherigen Sicherung als `undo` zurück. Vorschau und Wiederherstellung dieses Eintrags machen den Vorgang rückgängig. Das Archiv liegt im selben Clone wie die Datenbank.
+
+## Resource Bound Documentation
+
+`npx aip init --context` richtet den Projektindex und die Arbeitsregel in `AGENTS.md` ein. Die Einrichtung mit `--codex` oder `--kiro` enthält dieselbe Struktur. Bestehende Notizen bleiben erhalten. Agents mit einem anderen Einstiegsformat können aus ihrer Projektanleitung auf `AGENTS.md` verweisen.
+
+Der Index `CONTEXT.md` im Repository-Stamm verbindet Epic, Quellordner und Doku. Ein Eintrag wie `[Integration and Release](tool/integration-and-release/README.md)` steht für den gleichnamigen Ticket-Epic. Das README liegt im Quellordner. Feature- und Dateinotizen liegen neben dem jeweiligen Code. Bestehende Projekte mit `docs/context/index.md` können dieses Layout weiterverwenden.
+
+Für einen neuen Bereich legt `npx aip context epic "Epic name"` den Quellordner, die Doku und den Indexeintrag an. `npx aip context check [base]` prüft neue Dateien und ihre Zuordnung lokal. Als Vergleich dient standardmäßig `HEAD`.
+
+**Documentation** öffnet den Projektindex im Vollbild. Das Inhaltsverzeichnis zeigt die Abschnitte der aktuellen Seite und die verlinkten Feature- und Dateinotizen. Auf Unterseiten führt **Back** zur vorherigen Seite. Über die Pfadzeile gelangst du direkt zu einem früheren Eintrag oder zum Projektindex.
+
+Für eine Fortsetzung kann ein Agent einen kurzen, Git-ignorierten Übergabestand unter `.aip/handoffs/<ticket-id>.md` ablegen. Im neuen Chat legt der Agent ein neues Ticket an und verweist in dessen Beschreibung auf das vorherige Ticket.
+
+Die Warnung betrachtet den zuletzt gemessenen Chat. Ab 25 % Kontext vergleicht AIP dessen letzte fünf abgeschlossene Tickets mit mindestens 25 % Startkontext mit den Tickets desselben Chats unter 25 %. Beide Gruppen brauchen mindestens fünf Messwerte für die jeweilige Kennzahl. Steigen Tokens oder Arbeitszeit pro Story Point um mindestens 30 %, meldet das Dashboard höheren Aufwand. Ab 95 % meldet es zusätzlich das nahende Kontextlimit. Der Hinweis zum Wechsel erscheint derzeit für Codex, da dessen Messadapter den Kontextfüllstand liefert.
 
 Fehlende Messwerte aus bereits gelöschten Sitzungen lassen sich mit einem Backup des ursprünglichen Verlaufs oder Logs nachtragen.
 
@@ -114,6 +142,7 @@ Beispiel für ein Ticket mit einem zugeordneten Codex-Durchlauf:
 {
   "id": "P-001",
   "name": "Aktiven TOC-Eintrag sichtbar halten",
+  "description": "Beim Scrollen soll der aktive Abschnitt im Inhaltsverzeichnis sichtbar bleiben.",
   "epic": "Documentation Navigation",
   "points": 2,
   "strategy": "fresh",

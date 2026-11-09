@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-package-check.cjs\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-package-check.cjs\"",
             "timeout": 5
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-package-check.cjs\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-package-check.cjs\"",
             "timeout": 5
           }
         ]
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "timeout": 15,
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-history.cjs\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-history.cjs\"",
             "type": "command"
           }
         ]
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-package-check.cjs\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-package-check.cjs\"",
             "timeout": 3
           }
         ]
@@ -45,7 +45,7 @@
         "hooks": [
           {
             "timeout": 3,
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-history.cjs\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-history.cjs\"",
             "type": "command"
           }
         ]
@@ -56,8 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-usage.cjs\"",
-            "async": true,
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-usage.cjs\"",
             "timeout": 5
           }
         ]
@@ -68,7 +67,7 @@
         "hooks": [
           {
             "timeout": 3,
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/context-history.cjs\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/runtime.cjs\" \"$(git rev-parse --show-toplevel)/.codex/hooks/context-history.cjs\"",
             "type": "command"
           }
         ]

@@ -1,0 +1,125 @@
+@import "@tobiasoberpaul/mdk/motion.css";
+@import "../design-system/documentation-toc.css";
+@import "../design-system/product-header.css";
+@import "../design-system/tokens.css";
+@config "./tailwind.config.cjs";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dashboard-shell {
+  --dashboard-gutter: 32px;
+  --dashboard-content-inset: calc(5vw + var(--dashboard-gutter));
+}
+.dashboard-content { margin-inline: var(--dashboard-content-inset); }
+
+.dashboard-header {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+  column-gap: 16px;
+  padding: var(--dashboard-gutter) var(--dashboard-content-inset);
+}
+.dashboard-header > .shell-title { display: contents; }
+.dashboard-header .shell-home { min-width: 0; overflow-wrap: anywhere; }
+.dashboard-header .shell-switches { justify-self: end; }
+
+@media (max-width: 1199.98px) {
+  .dashboard-header { grid-template-columns: minmax(0,1fr) auto; row-gap: 8px; }
+  .dashboard-header .aip-header-navigation { grid-column: 1 / -1; grid-row: 2; }
+  .dashboard-header .aip-header-navigation > button { flex: 1; }
+}
+@media (max-width: 767.98px) {
+  .dashboard-shell {
+    --dashboard-gutter: 16px;
+    --dashboard-content-inset: var(--dashboard-gutter);
+  }
+  .dashboard-header { padding-block: 28px; }
+}
+
+.project-doc-breadcrumb { padding: 8px var(--dashboard-content-inset); }
+
+.project-doc-reader {
+  --page-gutter: var(--dashboard-gutter);
+  padding: 40px var(--page-gutter);
+  scroll-padding-top: 16px;
+}
+
+@media (min-width: 1280px) {
+  .project-doc-reader > article { max-width: min(48rem, calc(100% - 320px)); }
+}
+
+@media (max-width: 1279.98px) {
+  .project-doc-reader {
+    --shell-header-slot: 0px;
+    padding-top: 0;
+    scroll-padding-top: calc(var(--docs-toc-height, 52px) + 16px);
+  }
+  .project-doc-reader > .docs-toc {
+    position: sticky;
+    width: auto;
+    margin-inline: calc(-1 * var(--page-gutter));
+    margin-bottom: 24px;
+  }
+}
+
+.context-filter-switch,
+.overview-kpis-toggle {
+  display: none;
+}
+
+@container (min-width: 32rem) {
+  .context-controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-height: 820px), (max-width: 639px) {
+  .overview-kpis-toggle { display: inline-flex; }
+  [data-show-metrics="false"] .overview-kpis,
+  [data-show-metrics="true"] .overview-analysis { display: none; }
+  [data-show-metrics="true"] .overview-kpis { flex: 1; min-height: 0; align-content: start; overflow-y: auto; }
+}
+
+@media (max-height: 550px) {
+  .context-panel .context-heading { @apply sr-only; }
+  .context-filter-switch { display: inline-flex; }
+  .context-controls[data-expanded="false"],
+  .context-figure[data-filters-expanded="true"] { display: none; }
+}
+
+.ticket-row-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ticket-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ticket-column-headings { display: none; }
+
+@container (min-width: 30rem) {
+  .ticket-fields {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 44rem) {
+  .ticket-row-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    column-gap: 1rem;
+  }
+  .ticket-column-headings { display: grid; }
+  .ticket-compact-metrics .ticket-field-label { @apply sr-only; }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased tabular-nums;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+}

@@ -1,1 +1,1 @@
-module.exports = require('../../telemetry/.codex/hooks/performance-store.cjs');
+module.exports = require('../../tool/telemetry/.codex/hooks/performance-store.cjs');

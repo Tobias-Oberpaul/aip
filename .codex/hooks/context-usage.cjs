@@ -1,5 +1,5 @@
 const { randomUUID } = require('node:crypto');
-const { withStore, put } = require('./performance-store.cjs');
+const { withWriteStore, put } = require('./performance-store.cjs');
 const { join } = require('node:path');
 
 process.stdin.setEncoding('utf8');
@@ -16,9 +16,10 @@ process.stdin.on('end', () => {
     turnId: event.turn_id ?? null,
     agentId: event.agent_id ?? null,
     model: event.model ?? null,
+    effort: event.reasoning_effort ?? event.effort ?? null,
     status: event.status ?? null,
     tokenUsage: event.token_usage ?? null,
   };
 
-  withStore(join(__dirname, '..', '..'), db => put(db, 'attempt', randomUUID(), record));
+  withWriteStore(process.env.AI_PERFORMANCE_PROJECT || join(__dirname, '..', '..'), db => put(db, 'attempt', randomUUID(), record));
 });
